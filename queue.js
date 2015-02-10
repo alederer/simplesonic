@@ -79,6 +79,9 @@ function makeQueue(library, subsonic) {
 	}
 
 	function playNow(id) {
+		// @TODO: is it ever good behavior to skip to the song? example of bad case:
+		// i forget, but it happened - try to remember/keep an eye out
+		
 		// var idx = _queue.indexOf(id);
 		// if (idx === -1) {
 			addNext(id);
@@ -110,7 +113,6 @@ function makeQueue(library, subsonic) {
 
 		if (!item.isDir) {
 			subsonic.stream(_queue[_curIdx], _audio);
-			_scrollToPlaying();
 		}
 		else {
 			// expand directories on demand
@@ -132,6 +134,7 @@ function makeQueue(library, subsonic) {
 			}
 		}
 
+		_scrollToPlaying();
 		_render();
 	}
 
