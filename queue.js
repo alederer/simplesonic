@@ -1,9 +1,14 @@
 function makeQueue(library, subsonic) {
-	var _queue = [];
+	var _queue = []; // ids, can include directories which will be expanded on demand
 	var _shuffle = false;
 	var _curIdx = 0;
-	var _root = document.getElementById("queue").children[0];
+	var _div = document.getElementById("queue");
+	var _ul = _div.children[0];
 	var _audio = document.getElementsByTagName("audio")[0];
+	var _replicationWaitingId = -1;
+
+	library.listenReplicated(_onReplicate);
+	_audio.onended = _onPlayFinish;
 
 	function _onClick(ev) {
 		ev.cancelBubble = true;
@@ -17,12 +22,29 @@ function makeQueue(library, subsonic) {
 		restart();
 	}
 
-	function _render() {
-		if (_queue.length === 0) { return; }
-		while (_root.firstChild) { _root.removeChild(_root.firstChild); }
-		var curId = _queue[_curIdx];
+	function _onReplicate(item) {
+		if (_replicationWaitingId === item.id) {
+			_replicationWaitingId = -1;
+			restart();
+		}
+	}
 
-		_.each(_queue, function (id) {
+	function _scrollToPlaying() {
+		var li = _ul.children[_curIdx];
+		var liRect = li.getBoundingClientRect();
+		var divRect = _div.getBoundingClientRect();
+
+		if (liRect.right > divRect.right) {
+			_div.scrollLeft += liRect.left * 0.5;
+		}
+	}
+
+	function _render() {
+		var scroll = _div.scrollLeft;
+		while (_ul.firstChild) { _ul.removeChild(_ul.firstChild); }
+		if (_queue.length === 0) { return; }
+
+		_.each(_queue, function (id, i) {
 			var item = library.getItem(id);
 			var li = document.createElement("li");
 			var a = document.createElement("a");
@@ -30,29 +52,42 @@ function makeQueue(library, subsonic) {
 			a.href = "#";
 			a.onclick = _onClick;
 			li.appendChild(a);
-			if (id === curId) { li.className = "playing"; }
-			_root.appendChild(li);
+			if (i === _curIdx) { li.className = "playing"; }
+
+			if (item.isDir) {
+				a.innerText = "..." + a.innerText + "...";
+			}
+
+			_ul.appendChild(li);
 		});
+
+		_div.scrollLeft = scroll;
 	}
 
-	function addAtEnd(id) {
-		_queue[_queue.length] = id;
-	}
-
-	function addNext(id) {
-		if (_queue.length === 0) {
-			_queue[0] = id;
-		}
-		else {
-			_queue.splice(_curIdx + 1, 0, id);
-		}
-
+	function _addAtIdx(id, idx, dontrender) {
+		if (arguments.length === 2) { dontrender = false; }
+		_queue.splice(idx, 0, id);
 		_render();
 	}
 
+	function addAtEnd(id) {
+		_addAtIdx(id, _queue.length);
+	}
+
+	function addNext(id) {
+		_addAtIdx(id, _queue.length === 0 ? _curIdx : _curIdx + 1);
+	}
+
 	function playNow(id) {
-		addNext(id);
-		playNext();
+		// var idx = _queue.indexOf(id);
+		// if (idx === -1) {
+			addNext(id);
+			playNext();
+		// }
+		// else {
+		// 	_curIdx = idx;
+		// 	restart();
+		// }
 	}
 
 	function playNext() {
@@ -69,11 +104,52 @@ function makeQueue(library, subsonic) {
 
 	function restart() {
 		if (_queue.length === 0) { return; }
-		subsonic.stream(_queue[_curIdx], _audio);
+		_replicationWaitingId = -1;
+
+		var item = library.getItem(_queue[_curIdx]);
+
+		if (!item.isDir) {
+			subsonic.stream(_queue[_curIdx], _audio);
+			_scrollToPlaying();
+		}
+		else {
+			// expand directories on demand
+			if (item.replicated) {
+				remove(_curIdx);
+				var origIdx = _curIdx;
+				_.each(item.children, function (item) {
+					_addAtIdx(item.id, _curIdx, false);
+					_curIdx++;
+				});
+				_curIdx = origIdx;
+				restart();
+			}
+			else {
+				// wait til it's replicated
+				pause();
+				_replicationWaitingId = item.id;
+				library.replicate(item);
+			}
+		}
+
 		_render();
 	}
 
+	function remove(idx) {
+		if (idx >= queue.length ) { return; }
+		if (_curIdx > idx) { _curIdx--; }
+		_queue.splice(idx, 1);
+		if (_curIdx == idx) {
+			restart();
+		}
+
+	}
+
 	function playPause() {}
+
+	function pause() {
+		_audio.pause();
+	}
 
 	function _onPlayFinish(id) {
 		playNext();
@@ -81,6 +157,14 @@ function makeQueue(library, subsonic) {
 
 	function _onPlayStart(id) {
 
+	}
+
+	function clear() {
+		_audio.pause();
+		_queue = []
+		_curIdx = 0;
+		_replicationWaitingId = -1;
+		_render();
 	}
 	
 	return {
@@ -91,6 +175,8 @@ function makeQueue(library, subsonic) {
 		playPrev : playPrev,
 		playPause : playPause,
 		restart : restart,
+		getQueue : function () { return _queue; },
+		clear : clear,
 	};
 }
 

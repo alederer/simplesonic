@@ -44,6 +44,7 @@ var makeLibrary = function (subsonic) {
 	}
 
 	function replicate(v) {
+		if (typeof(v) === "number") { v = _items[v]; }
 		_updateChildren(v);
 	};
 

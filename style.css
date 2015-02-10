@@ -1,0 +1,137 @@
+body {
+	margin: 0;
+	padding: 0;
+	font-family: sans-serif;
+}
+form { margin: 0; padding: 0; }
+
+#header, #footer {
+	width: 100%;
+	float: left;
+}
+
+#header {
+	background-color: #DDD;
+	position: fixed;
+	top: 0;
+	z-index: 9999;
+}
+
+#footer {
+	/* background-color: #000; */
+	background-color: #DDD;
+	position: fixed;
+	bottom: 0;
+	z-index: 9999;
+	border-top: 1px solid black;
+}
+
+#header ul {
+	margin: 0px;
+	padding: 0px;
+}
+
+#header1 {
+	padding: 5px;
+	height: 20px;
+	width: 100%;
+	border-bottom: 1px solid black;
+}
+
+#menu {
+	float: left;
+	/* height: 25px; */
+}
+
+#menu li  {
+	display: inline;
+	list-style-type: none;
+}
+
+#status {
+	position: absolute;
+	right: 10px;
+}
+
+#config {
+	padding: 10px;
+	border-bottom: 1px solid black;
+}
+
+#folderView ul {
+	padding-left: 20px;
+}
+
+#folderView li {
+	/* background-color: #EEE; */
+	margin-left: 0px;
+	list-style: none;
+}
+
+#folderview a {
+	margin-right: 10px;
+	color: #000;
+	text-decoration: none;
+}
+
+#folderView li.song a {
+	color: #59F;
+}
+
+
+/* #folderView li:nth-child(odd) { */
+/* 	background-color: #DDD; */
+/* } */
+
+#content{
+	padding-top: 25px;
+	padding-bottom: 35px;
+}
+
+#player {
+	padding-top: 3px;
+	/* background-color: #000; */
+}
+
+#queue {
+	height: 90px;
+	padding: 0px;
+	margin: 0px;
+	overflow-x: scroll;
+	overflow-y: hidden;
+	white-space: nowrap;
+	/* padding-bottom: 15px; */
+	padding-top: 5px;
+}
+
+#queue ul {
+	display: flex;
+	flex-direction: column;
+	flex-wrap: wrap;
+	margin: 0px;
+	padding: 0px;
+	width: 100%;
+	height: 100%;
+	align-content: flex-start;
+	/* height: 70px; */
+}
+
+
+#queue li {
+	/* display: block; */
+	border: 1px solid black;
+	padding: 2px;
+	margin: 1px;
+	width: 200px;
+	height: 25px;
+	/* width: auto; */
+	overflow: hidden;
+	white-space: nowrap;
+	vertical-align: top;
+}
+
+#queue li.playing {
+	background-color: #FFF;
+}
+
+
